@@ -53,12 +53,11 @@ class MyHMC(object):
         ln_r = np.log(np.random.rand())
         #print(Hnew, H)
         upper_limit = np.min([0, -Hnew + H])
+        self.count += 1
         if ln_r < upper_limit: #Accept proposal
-            self.count += 1
             self.q[self.count] = qnew
             self.p[self.count] = pnew
         else: #Reject
-            self.count += 1
             self.q[self.count] = qi
             self.p[self.count] = pi
 
@@ -94,11 +93,11 @@ if __name__ == "__main__":
     def grad_lnpost(q):
         return -q
 
-    q0 = np.array([0.5, 0.03])
+    q0 = np.array([0.5, 0.5])
     M = np.eye(2)
     hmc = MyHMC(lnpost, grad_lnpost, len(q0), M)
 
-    Nsamples = 10000
+    Nsamples = 1000
 
     hmc.run(q0, Nsamples)
 
