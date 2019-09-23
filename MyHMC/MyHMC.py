@@ -15,22 +15,13 @@ class MyHMC(object):
         self.Minv = np.linalg.inv(M)
 
     def _compute_Hamiltonian(self, q, p):
-        d = self.ndim
-        M = self.M
-        detM = self.detM
-        Minv = self.Minv
-        Left = -self.lnpost(q)
-        right = 0.5 * (d * np.log(2 * np.pi * detM) +
-                       p.T @ Minv @ p)
-        #print("here", Left, right)
-        return Left + right
-
+        return -self.lnpost(q) - ss.multivariate_normal.logpdf(p, cov=M)
+        
     def sample_once(self):
         i = self.count
         qi = self.q[i]
-        pi = self.p[i]
+        pi = ss.multivariate_normal.rvs(mean = np.zeros_like(qi), cov = self.M)
         H = self._compute_Hamiltonian(qi, pi)
-
 
         #Set the leapfrogger step size and number of steps
         #epsilon is set _roughly_ adaptively according to the minimum
@@ -40,8 +31,6 @@ class MyHMC(object):
         #These choices would get eliminated for NUTS
         epsilon = 10**(np.random.rand()*2 - 3.)
         L = np.random.randint(100, 1000)
-        #self.L = int(np.pi/self.epsilon)
-        #print(self.epsilon, self.L)
         
         frogger = LF.leapfrogger(qi, pi, self.grad_lnpost,
                                  epsilon, L, Minv = self.Minv)
@@ -51,7 +40,6 @@ class MyHMC(object):
         Hnew = self._compute_Hamiltonian(qnew, pnew)
 
         ln_r = np.log(np.random.rand())
-        #print(Hnew, H)
         upper_limit = np.min([0, -Hnew + H])
         self.count += 1
         if ln_r < upper_limit: #Accept proposal
@@ -90,12 +78,12 @@ if __name__ == "__main__":
     def lnpost(q): #Unit normal dist
         return -q.T @ q / 2.
     
-    def grad_lnpost(q):
-        return -q
+    def neg_grad_lnpost(q):
+        return q
 
     q0 = np.array([0.5, 0.5])
     M = np.eye(2)
-    hmc = MyHMC(lnpost, grad_lnpost, len(q0), M)
+    hmc = MyHMC(lnpost, neg_grad_lnpost, len(q0), M)
 
     Nsamples = 1000
 

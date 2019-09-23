@@ -4,13 +4,13 @@ an arbitrary mass matrix.
 import numpy as np
 
 class leapfrogger(object):
-    def __init__(self, q0, p0, gradU, epsilon, L, Minv=None):
+    def __init__(self, q0, p0, neg_grad_U, epsilon, L, Minv=None):
         """An object for performing leapfrog integration.
 
         Args:
             q0: original coordinates
             p0: original momenta
-            gradU (callable): the gradient of the potential
+            neg_grad_U (callable): negative of the gradient of the potential
             epsilon: the 'time step'
             L: number of steps to take
             M (optional): mass matrix
@@ -20,12 +20,12 @@ class leapfrogger(object):
         p0 = np.asarray(p0)
         self.q0 = q0
         self.p0 = p0
-        #self.q = np.zeros((L+1, len(q0)))
-        self.q = np.zeros((2, len(q0)))
+        self.q = np.zeros((L+1, len(q0)))
+        #self.q = np.zeros((2, len(q0)))
         self.q[0] = q0
         self.p = np.zeros_like(self.q)
         self.p[0] = p0
-        self.gradU = gradU
+        self.neg_grad_U = neg_grad_U
         self.epsilon = epsilon
         self.L = L
         if Minv is None:
@@ -42,40 +42,32 @@ class leapfrogger(object):
         Minv = self.Minv
 
         #Compute the forces once each step
-        gradU_i = gradU_i = self.gradU(self.q[0])
+        ngradU_i = self.neg_grad_U(self.q[0])
         for i in range(1, self.L+1):
 
             #Leapfrog update the positions
-            #self.q[i] = self.q[i-1] \
-            #    + e * Minv @ (self.p[i-1] + 0.5 * e2 * gradU_i)
-            self.q[1] = self.q[0] \
-                + e * Minv @ (self.p[0] + 0.5 * e2 * gradU_i)
+            self.q[i] = self.q[i-1] \
+                + e * Minv @ (self.p[i-1] - 0.5 * e2 * ngradU_i)
 
             #Leapfrog update the momenta
-            #gradU_i1 = self.gradU(self.q[i])
-            #self.p[i] = self.p[i-1] \
-            #    + 0.5 * e * (gradU_i1 + gradU_i)
-            gradU_i1 = self.gradU(self.q[1])
-            self.p[1] = self.p[0] \
-                + 0.5 * e * (gradU_i1 + gradU_i)
-
-            self.q[0] = self.q[1]
-            self.p[0] = self.p[1]
+            ngradU_i1 = self.neg_grad_U(self.q[i])
+            self.p[i] = self.p[i-1] \
+                - 0.5 * e * (ngradU_i1 + ngradU_i)
 
             #Update the force gradient variable
-            gradU_i = gradU_i1
+            ngradU_i = ngradU_i1
         return
 
 if __name__ == "__main__":
-    def gradU(q): #negative the log of a Gaussian
-        return -q
+    def neg_grad_U(q): #negative the log of a Gaussian
+        return q
         
     q0 = np.array([1, 0])
     p0 = np.array([0, 1.1])
     e = 0.001
     L = 10000
 
-    LF = leapfrogger(q0, p0, gradU, e, L)
+    LF = leapfrogger(q0, p0, neg_grad_U, e, L)
     LF.compute_trajectory()
 
     import matplotlib.pyplot as plt
