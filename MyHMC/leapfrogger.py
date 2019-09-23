@@ -46,25 +46,23 @@ class leapfrogger(object):
 
             #Leapfrog update the positions
             self.q[i] = self.q[i-1] \
-                + e * Minv @ (self.p[i-1] - 0.5 * e2 * gradU_i)
+                + e * Minv @ (self.p[i-1] + 0.5 * e2 * gradU_i)
 
             #Leapfrog update the momenta
             gradU_i1 = self.gradU(self.q[i])
             self.p[i] = self.p[i-1] \
-                - 0.5 * e * (gradU_i1 + gradU_i)
+                + 0.5 * e * (gradU_i1 + gradU_i)
 
             #Update the force gradient variable
             gradU_i = gradU_i1
         return
 
 if __name__ == "__main__":
-    def gradU(q):
-        #U(q) = - 1/q
-        r = np.sqrt(q.T @ q)
-        return q / r**3
+    def gradU(q): #negative the log of a Gaussian
+        return -q
         
     q0 = np.array([1, 0])
-    p0 = np.array([0, 1])
+    p0 = np.array([0, 1.1])
     e = 0.001
     L = 10000
 
