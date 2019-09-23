@@ -33,7 +33,8 @@ class MyHMC(object):
         L = np.random.randint(100, 1000)
         
         frogger = LF.leapfrogger(qi, pi, self.grad_lnpost,
-                                 epsilon, L, Minv = self.Minv)
+                                 epsilon, L, Minv = self.Minv,
+                                 save_trajectory = False)
         frogger.compute_trajectory()
         qnew = frogger.q[-1]
         pnew = frogger.p[-1]
