@@ -20,7 +20,8 @@ class leapfrogger(object):
         p0 = np.asarray(p0)
         self.q0 = q0
         self.p0 = p0
-        self.q = np.zeros((L+1, len(q0)))
+        #self.q = np.zeros((L+1, len(q0)))
+        self.q = np.zeros((2, len(q0)))
         self.q[0] = q0
         self.p = np.zeros_like(self.q)
         self.p[0] = p0
@@ -45,13 +46,21 @@ class leapfrogger(object):
         for i in range(1, self.L+1):
 
             #Leapfrog update the positions
-            self.q[i] = self.q[i-1] \
-                + e * Minv @ (self.p[i-1] + 0.5 * e2 * gradU_i)
+            #self.q[i] = self.q[i-1] \
+            #    + e * Minv @ (self.p[i-1] + 0.5 * e2 * gradU_i)
+            self.q[1] = self.q[0] \
+                + e * Minv @ (self.p[0] + 0.5 * e2 * gradU_i)
 
             #Leapfrog update the momenta
-            gradU_i1 = self.gradU(self.q[i])
-            self.p[i] = self.p[i-1] \
+            #gradU_i1 = self.gradU(self.q[i])
+            #self.p[i] = self.p[i-1] \
+            #    + 0.5 * e * (gradU_i1 + gradU_i)
+            gradU_i1 = self.gradU(self.q[1])
+            self.p[1] = self.p[0] \
                 + 0.5 * e * (gradU_i1 + gradU_i)
+
+            self.q[0] = self.q[1]
+            self.p[0] = self.p[1]
 
             #Update the force gradient variable
             gradU_i = gradU_i1

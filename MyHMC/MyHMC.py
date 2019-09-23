@@ -38,8 +38,8 @@ class MyHMC(object):
         #L should be set as the length of the circle around the PDF at
         #the 1 sigma level
         #These choices would get eliminated for NUTS
-        epsilon = 10**(np.random.rand()*2 - 4.)
-        L = np.random.randint(1000, 2000)
+        epsilon = 10**(np.random.rand()*2 - 3.)
+        L = np.random.randint(100, 1000)
         #self.L = int(np.pi/self.epsilon)
         #print(self.epsilon, self.L)
         
@@ -98,7 +98,7 @@ if __name__ == "__main__":
     M = np.eye(2)
     hmc = MyHMC(lnpost, grad_lnpost, len(q0), M)
 
-    Nsamples = 1000
+    Nsamples = 10000
 
     hmc.run(q0, Nsamples)
 
